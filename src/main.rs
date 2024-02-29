@@ -32,6 +32,11 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let test_grids = sudoku_from_file(&args[1]);
 
+    let mut sud = bits::Sudoku::from(grid).unwrap();
+    println!("{sud}");
+    sud.solve();
+    println!("\n{sud}");
+
     let mut d1 = Vec::new();
     let mut d2 = Vec::new();
     let mut d3 = Vec::new();
@@ -42,9 +47,9 @@ fn main() {
         d3.push(measure(|| { bits::Sudoku::from(*grid).unwrap().solve(); }));
     }
 
-    println!("The backtracking algorithm took: {} s", d1.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + sets algorithm: {} s", d2.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + bit-sets algorithm: {} s", d3.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking algorithm took: {:.4} s", d1.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking + sets algorithm: {:.4} s", d2.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking + bit-sets algorithm: {:.4} s", d3.iter().sum::<f64>() / test_grids.len() as f64);
 }
 
 fn measure(f: impl FnOnce()) -> f64 {
