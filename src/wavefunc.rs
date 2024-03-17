@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{backtrace::{self, Backtrace}, fmt};
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
@@ -75,15 +75,16 @@ impl Sudoku {
 
     pub fn from(grid: [[u8; 9]; 9]) -> Result<Sudoku, &'static str> {
         let mut sud = Sudoku::new();
+        #[allow(clippy::needless_range_loop)]
         for r in 0..9 {
             for c in 0..9 {
                 let val = grid[r][c];
+                if val == 0u8 { continue; }
                 if !(1..=9).contains(&val) { return Err("Invalid number")}
                 sud.set(r, c, grid[r][c])?;
             }
         }
         Ok(sud)
-
     }
 
     pub fn set(&mut self, r: usize, c: usize, x: u8) -> Result<bool, &'static str> {
@@ -155,19 +156,22 @@ impl Sudoku {
     }
     
     fn propagate_set(&mut self, r: usize, c: usize, x: u8) -> bool {
+        let backup = self.grid;
         for i in 0..9 {
             if i != r {
                 let cell = &mut self.grid[i][c];
                 cell.remove(x);
-                if cell.is_empty() {
+                if cell.is_empty() || !self.propagate_set(i, c, x) {
+                    self.grid = backup;
                     return false;
-                } // backtrack, make sure to revert to pre-remove state
+                } // backtrack, make sure to revert to pre-set state
             }
             
             if i != c {
                 let cell = &mut self.grid[r][i];
                 cell.remove(x);
-                if cell.is_empty() {
+                if cell.is_empty() || !self.propagate_set(r, i, x){
+                    self.grid = backup;
                     return false;
                 } // backtrack
             }
@@ -178,7 +182,8 @@ impl Sudoku {
             if (ir != r) && (ic != c) {
                 let cell = &mut self.grid[ir][ic];
                 cell.remove(x);
-                if cell.is_empty() {
+                if cell.is_empty() || !self.propagate_set(ir, ic, x) {
+                    self.grid = backup;
                     return false;
                 } // backtrack
             }

@@ -1,4 +1,4 @@
-use sudoku::{backtrack, sets, bits};
+use sudoku::{backtrack, sets, bits, wavefunc};
 use std::time::Instant;
 use std::env;
 
@@ -29,27 +29,15 @@ fn main() {
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     // ];
-    let args: Vec<String> = env::args().collect();
-    let test_grids = sudoku_from_file(&args[1]);
-
-    let mut sud = bits::Sudoku::from(grid).unwrap();
+    let mut sud = wavefunc::Sudoku::from(grid).unwrap();
     println!("{sud}");
     sud.solve();
     println!("\n{sud}");
-
-    let mut d1 = Vec::new();
-    let mut d2 = Vec::new();
-    let mut d3 = Vec::new();
-
-    for grid in &test_grids {
-        d1.push(measure(|| { backtrack::Sudoku::from(*grid).unwrap().solve(); }));
-        d2.push(measure(|| { sets::Sudoku::from(*grid).unwrap().solve(); }));
-        d3.push(measure(|| { bits::Sudoku::from(*grid).unwrap().solve(); }));
-    }
-
-    println!("The backtracking algorithm took: {:.4} s", d1.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + sets algorithm: {:.4} s", d2.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + bit-sets algorithm: {:.4} s", d3.iter().sum::<f64>() / test_grids.len() as f64);
+    
+    
+    // let args: Vec<String> = env::args().collect();
+    // let test_grids = sudoku_from_file(&args[1]);
+    // performance_test(&test_grids);
 }
 
 fn measure(f: impl FnOnce()) -> f64 {
@@ -75,4 +63,20 @@ fn sudoku_from_file(filename: &String) -> Vec<[[u8; 9]; 9]> {
         grids.push(tmp);
     });
     grids
+}
+
+fn performance_test(test_grids: &Vec<[[u8; 9]; 9]>) {
+    let mut d1 = Vec::new();
+    let mut d2 = Vec::new();
+    let mut d3 = Vec::new();
+
+    for grid in test_grids {
+        d1.push(measure(|| { backtrack::Sudoku::from(*grid).unwrap().solve(); }));
+        d2.push(measure(|| { sets::Sudoku::from(*grid).unwrap().solve(); }));
+        d3.push(measure(|| { bits::Sudoku::from(*grid).unwrap().solve(); }));
+    }
+
+    println!("The backtracking algorithm took: {:.4} s", d1.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking + sets algorithm: {:.4} s", d2.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking + bit-sets algorithm: {:.4} s", d3.iter().sum::<f64>() / test_grids.len() as f64);
 }
