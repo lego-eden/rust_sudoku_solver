@@ -74,12 +74,22 @@ impl Sudoku {
     }
 
     pub fn from(grid: [[u8; 9]; 9]) -> Result<Sudoku, &'static str> {
-        todo!();
+        let mut sud = Sudoku::new();
+        for r in 0..9 {
+            for c in 0..9 {
+                let val = grid[r][c];
+                if !(1..=9).contains(&val) { return Err("Invalid number")}
+                sud.set(r, c, grid[r][c])?;
+            }
+        }
+        Ok(sud)
+
     }
 
     pub fn set(&mut self, r: usize, c: usize, x: u8) -> Result<bool, &'static str> {
         restrain_index(r, c)?;
-        if !(1..=9).contains(&x) { return Err("x not in 1..=9")}
+        if !(1..=9).contains(&x) { return Err("x not in 1..=9"); }
+        if !self.grid[r][c].contains(x) { return Ok(false) }
         let backup = self.grid;
         self.grid[r][c] = BitSet::from_single(x);
         if !self.propagate_set(r, c, x) {
@@ -105,8 +115,28 @@ impl Sudoku {
         )
     }
 
+    #[allow(clippy::needless_range_loop)]
+    pub fn get_grid(&self) -> [[u8; 9]; 9] {
+        let mut res = [[0u8; 9]; 9];
+        for r in 0..9 {
+            for c in 0..9 {
+                res[r][c] = self.get(r, c).unwrap();
+            }
+        }
+        res
+    }
+
+    #[allow(clippy::needless_range_loop)]
     pub fn clear(&mut self, r: usize, c: usize) -> Result<(), &'static str> {
-        todo!();
+        restrain_index(r, c)?;
+        let tmp = self.get_grid();
+        self.clear_all();
+        for ir in 0..9 {
+            for ic in 0..9 {
+                if ir != r && ic != c { self.set(ir, ic, tmp[ir][ic])?; }
+            }
+        }
+        Ok(())
     }
 
     pub fn clear_all(&mut self) {
@@ -115,7 +145,13 @@ impl Sudoku {
 
     #[allow(clippy::needless_range_loop)]
     pub fn set_grid(&mut self, grid: [[u8; 9]; 9]) -> Result<bool, &'static str> {
-        todo!();
+        self.clear_all();
+        for (r, row) in grid.into_iter().enumerate() {
+            for (c, elem) in row.into_iter().enumerate() {
+                if !self.set(r, c, elem)? { return Ok(false); }
+            }
+        }
+        Ok(true)
     }
     
     fn propagate_set(&mut self, r: usize, c: usize, x: u8) -> bool {
@@ -136,8 +172,8 @@ impl Sudoku {
                 } // backtrack
             }
             
-            let ir = i / 3;
-            let ic = i % 3;
+            let ir = r / 3 + i / 3;
+            let ic = c / 3 + i % 3;
             
             if (ir != r) && (ic != c) {
                 let cell = &mut self.grid[ir][ic];
@@ -151,7 +187,7 @@ impl Sudoku {
              // possible numbers => the algorithm can continue.
     }
 
-    fn lowest_entropy(&self) -> Option<(usize, usize)> {
+    fn lowest_global_entropy(&self) -> Option<(usize, usize)> {
         let mut lowest_coords = None;
         let mut lowest_size = 10;
         for row in 0..9 {
@@ -167,15 +203,23 @@ impl Sudoku {
     }
 
     pub fn solve(&mut self) -> bool {
-        todo!();
+        match self.lowest_global_entropy() {
+            Some((row, col)) => self.solve_at(row, col),
+            None => true,
+        }
     }
 
     fn solve_at(&mut self, r: usize, c: usize) -> bool {
-        let cell = &mut self.grid[r][c];
+        let (lowest_entropy_row, lowest_entropy_col) = match self.lowest_global_entropy() {
+            Some(point) => point,
+            None => return true,
+        };
         
-        let mut i = 1u8;
-        while !cell.contains(i) { i += 1; }
-        todo!();
+        for i in 1..=9 {
+            if !self.set(r, c, i).unwrap() { continue; }
+            if self.solve_at(lowest_entropy_row, lowest_entropy_col) { return true; }
+        }
+        false
     }
 }
 
