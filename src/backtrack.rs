@@ -109,19 +109,13 @@ impl Sudoku {
         let new_r = r + ((c + 1) / 9);
 
         if self.get(r, c).unwrap() != 0 {
-            if !self.is_all_valid() { return false; }
+            if !self.is_valid(r, c).unwrap() { return false; }
             else { return self.solve_at(new_r, new_c); }
         }
 
-        // let valid_nums: HashSet<u8> = self.r_sets[new_r]
-        //     .intersection(&self.c_sets[new_c])
-        //     .filter(|n| self.z_sets[new_c][new_r].contains(n))
-        //     .map(|n| *n)
-        //     .collect();
-
         for n in 1..=9 {
             self.set(r, c, n).unwrap();
-            if self.is_all_valid() && self.solve_at(new_r, new_c) { return true; }
+            if self.is_valid(r, c).unwrap() && self.solve_at(new_r, new_c) { return true; }
         }
 
         self.clear(r, c).unwrap();

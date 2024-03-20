@@ -29,7 +29,7 @@ fn main() {
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     // ];
-    let mut sud = wavefunc::Sudoku::from(grid).unwrap();
+    let mut sud = backtrack::Sudoku::from(grid).unwrap();
     println!("{sud}");
     sud.solve();
     println!("\n{sud}");
