@@ -1,8 +1,0 @@
-Path for java installation '/usr/lib/jvm/openjdk-17' (Common Linux Locations) does not contain a java executable
-> Task :app:compileJava UP-TO-DATE
-> Task :app:processResources NO-SOURCE
-> Task :app:classes UP-TO-DATE
-> Task :app:run
-
-BUILD SUCCESSFUL in 9s
-2 actionable tasks: 1 executed, 1 up-to-date
