@@ -27,7 +27,7 @@ impl BitSet {
     }
 
     pub fn full() -> BitSet {
-        BitSet(!0u16)
+        BitSet(0b1111111110)
     }
 }
 

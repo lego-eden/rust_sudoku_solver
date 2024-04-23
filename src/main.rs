@@ -29,21 +29,29 @@ fn main() {
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     //     [0, 0, 0,  0, 0, 0,  0, 0, 0],
     // ];
-    let mut sud = backtrack::Sudoku::from(grid).unwrap();
-    println!("{sud}");
-    sud.solve();
-    println!("\n{sud}");
+    // let mut sud = backtrack::Sudoku::from(grid).unwrap();
+    // println!("{sud}");
+    // sud.solve();
+    // println!("\n{sud}");
     
     
-    // let args: Vec<String> = env::args().collect();
-    // let test_grids = sudoku_from_file(&args[1]);
+    let args: Vec<String> = env::args().collect();
+    let test_grids = sudoku_from_file(&args[1]);
     // performance_test(&test_grids);
+    if args.len() >= 4 {
+        performance_single_grid(
+            test_grids[args[2].parse::<usize>().expect("Could not parse grid index")],
+            args[3].parse().expect("Could not parse the number of repetitions")
+        );
+    } else {
+        performance_multiple_grids(&test_grids);
+    }
 }
 
-fn measure(f: impl FnOnce()) -> f64 {
+fn measure(f: impl FnOnce()) -> u128 {
     let t = Instant::now();
     f();
-    Instant::now().duration_since(t).as_secs_f64()
+    Instant::now().duration_since(t).as_nanos()
 }
 
 fn sudoku_from_file(filename: &String) -> Vec<[[u8; 9]; 9]> {
@@ -66,17 +74,35 @@ fn sudoku_from_file(filename: &String) -> Vec<[[u8; 9]; 9]> {
 }
 
 fn performance_test(test_grids: &Vec<[[u8; 9]; 9]>) {
-    let mut d1 = Vec::new();
-    let mut d2 = Vec::new();
-    let mut d3 = Vec::new();
+    let mut delta1 = Vec::new();
+    let mut delta2 = Vec::new();
+    let mut delta3 = Vec::new();
 
     for grid in test_grids {
-        d1.push(measure(|| { backtrack::Sudoku::from(*grid).unwrap().solve(); }));
-        d2.push(measure(|| { sets::Sudoku::from(*grid).unwrap().solve(); }));
-        d3.push(measure(|| { bits::Sudoku::from(*grid).unwrap().solve(); }));
+        delta1.push(measure(|| { backtrack::Sudoku::from(*grid).unwrap().solve(); }));
+        delta2.push(measure(|| { sets::Sudoku::from(*grid).unwrap().solve(); }));
+        delta3.push(measure(|| { bits::Sudoku::from(*grid).unwrap().solve(); }));
     }
 
-    println!("The backtracking algorithm took: {:.4} s", d1.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + sets algorithm: {:.4} s", d2.iter().sum::<f64>() / test_grids.len() as f64);
-    println!("The backtracking + bit-sets algorithm: {:.4} s", d3.iter().sum::<f64>() / test_grids.len() as f64);
+    println!("The backtracking algorithm took: {:.4} s", delta1.iter().sum::<u128>() / test_grids.len() as u128);
+    println!("The backtracking + sets algorithm: {:.4} s", delta2.iter().sum::<u128>() / test_grids.len() as u128);
+    println!("The backtracking + bit-sets algorithm: {:.4} s", delta3.iter().sum::<u128>() / test_grids.len() as u128);
+}
+
+fn performance_multiple_grids(test_grids: &[[[u8; 9]; 9]]) {
+    println!("försök,tid");
+    for (i, grid) in test_grids.iter().enumerate() {
+        let mut sud = backtrack::Sudoku::from(*grid).unwrap();
+        let delta = measure(|| { sud.solve(); });
+        println!("{i},{delta}");
+    }
+}
+
+fn performance_single_grid(test_grid: [[u8; 9]; 9], repetitions: u32) {
+    println!("försök,tid");
+    for i in 0..repetitions {
+        let mut sud = backtrack::Sudoku::from(test_grid).unwrap();
+        let delta = measure(|| { sud.solve(); });
+        println!("{i},{delta}");
+    }
 }
